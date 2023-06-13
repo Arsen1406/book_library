@@ -1,15 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, status
-from api.serializers import BooksSerializer
 from book.models import Book, Genre, Author
+from rentals.models import Rentals
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, \
-    IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from api.permissions import AdminOnly, AdminOrReadOnly, \
-    AdminOrOwner
+from api.permissions import (
+    AdminOnly,
+    AdminOrReadOnly,
+    AdminOrOwner,
+    MyUserPermissions
+)
 from api.serializers import (
     UserSerializer,
     SignUpSerializer,
@@ -17,8 +20,10 @@ from api.serializers import (
     RentalsSerializer,
     GenreSerializer,
     AuthorSerializer,
+    BooksSerializer,
 )
-from rentals.models import Rentals
+
+from api.utils import search_date_return_book
 
 User = get_user_model()
 
@@ -29,11 +34,25 @@ class BooksViewSet(viewsets.ModelViewSet):
     permission_classes = (AdminOrReadOnly,)
     queryset = Book.objects.all()
 
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if request.data.get('remains'):
+            request.data['remains'] += instance.remains
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
 
 class AuthorViewSet(viewsets.ModelViewSet):
-    search_fields = ('last_name',)
     serializer_class = AuthorSerializer
     permission_classes = (AdminOrReadOnly,)
+    search_fields = ('last_name',)
     queryset = Author.objects.all()
 
 
@@ -46,8 +65,13 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class RentalsViewSet(viewsets.ModelViewSet):
     serializer_class = RentalsSerializer
-    permission_classes = (AdminOrOwner,)
+    permission_classes = [IsAuthenticated, AdminOrOwner]
     queryset = Rentals.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset.filter(reader=user)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -55,11 +79,13 @@ class RentalsViewSet(viewsets.ModelViewSet):
         books = Book.objects.filter(pk__in=request.data.get('books'))
         for book in books:
             if book.remains == 0:
-                date = Rentals.objects.filter(books_pk__in)
+                date_return = search_date_return_book(book.id)
                 return Response(
                     data=(
-                        f'Книга {book} в данный момнт отсутствует'
-                        f'Ближайшая дата поступления'),
+                        f'Книга "{book}" в данный момент отсутствует. '
+                        f'Ближайшая дата поступления: '
+                        f'{date_return.return_date.date().strftime("%d.%m.%Y")}'
+                    ),
                     status=status.HTTP_200_OK
                 )
             book.remains -= 1
@@ -76,7 +102,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ('username',)
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (MyUserPermissions,)
     queryset = User.objects.all()
 
     @action(

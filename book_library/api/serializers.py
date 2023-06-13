@@ -97,3 +97,4 @@ class RentalsSerializer(serializers.ModelSerializer):
             'create_date',
             'return_date',
         )
+

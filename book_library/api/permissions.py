@@ -15,5 +15,9 @@ class AdminOnly(permissions.BasePermission):
 
 class AdminOrOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        print(request.user.is_staff or obj.reader == request.user)
         return request.user.is_staff or obj.reader == request.user
+
+
+class MyUserPermissions(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj
