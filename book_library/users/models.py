@@ -10,6 +10,7 @@ class User(AbstractUser):
         'last_name',
         'password',
     ]
+    id = models.AutoField(primary_key=True)
     email = models.EmailField(
         'email address',
         max_length=254,

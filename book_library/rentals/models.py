@@ -8,11 +8,12 @@ User = get_user_model()
 
 
 class Rentals(models.Model):
+    id = models.AutoField(primary_key=True)
     books = models.ManyToManyField(Book, verbose_name='Аренда книг')
     reader = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='book',
+        related_name='reader',
         verbose_name='Читатель'
     )
     create_date = models.DateTimeField(

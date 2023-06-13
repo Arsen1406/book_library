@@ -3,6 +3,7 @@ from django.db import models
 
 
 class Author(models.Model):
+    id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=255, verbose_name='Имя')
     last_name = models.CharField(max_length=255, verbose_name='Фамилия')
     birth_day = models.DateField(
@@ -20,6 +21,7 @@ class Author(models.Model):
 
 
 class Genre(models.Model):
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, verbose_name='Название жанра')
     description = models.CharField(
         max_length=2000,
@@ -36,6 +38,7 @@ class Genre(models.Model):
 
 
 class Book(models.Model):
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, verbose_name='Название книги')
     description = models.CharField(
         max_length=2000,
