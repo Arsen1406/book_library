@@ -37,9 +37,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
+    'rest_framework',
     'book.apps.BookConfig',
     'users.apps.UsersConfig',
     'api.apps.ApiConfig',
+    'rentals.apps.RentalsConfig',
 ]
 
 MIDDLEWARE = [
@@ -126,3 +129,10 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'users.User'
 STATIC_URL = '/static/'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
