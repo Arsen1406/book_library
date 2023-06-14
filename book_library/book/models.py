@@ -1,4 +1,5 @@
 from django.core import validators
+from django.utils.timezone import now
 from django.db import models
 
 
@@ -55,9 +56,13 @@ class Book(models.Model):
         ],
         verbose_name='Остаток'
     )
+    views = models.IntegerField(default=0, verbose_name='Популярность')
+    date_create = models.DateField(default=now())
 
     def __str__(self):
-        return self.title
+        return (
+            f'{self.title}: прочитали {self.views} раз с {self.date_create}'
+        )
 
     class Meta:
         verbose_name = 'Книга'

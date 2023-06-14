@@ -73,16 +73,20 @@ class AuthorSerializer(serializers.ModelSerializer):
 class BooksSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     author = AuthorSerializer(many=True)
-    reader = serializers.SerializerMethodField('get_readers')
+    status = serializers.SerializerMethodField('get_readers')
 
     def get_readers(self, obj):
         pk = obj.id
+        book = Book.objects.get(id=pk)
+        if book.remains > 0:
+            return 'Книга в наличии.'
         rentals = Rentals.objects.filter(books__id__in=[pk])
-        readers = [
-            (f'{reader.reader.username}: Возврат - '
-             f'{reader.return_date.date()}'
-             ) for reader in rentals]
-        return readers
+        date_return = min([date.return_date for date in rentals])
+
+        return (
+            f'Ближайшее поступление - '
+            f'{date_return.date().strftime("%d.%m.%Y")}'
+        )
 
     class Meta:
         model = Book
@@ -93,7 +97,8 @@ class BooksSerializer(serializers.ModelSerializer):
             'description',
             'genre',
             'remains',
-            'reader',
+            'status',
+            'views',
         )
 
 
@@ -113,3 +118,20 @@ class RentalsSerializer(serializers.ModelSerializer):
             'return_date',
         )
 
+
+class RentalsViewSerializer(serializers.ModelSerializer):
+    books = BooksSerializer(many=True)
+    reader = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        model = Rentals
+        fields = (
+            'id',
+            'reader',
+            'books',
+            'create_date',
+            'return_date',
+        )

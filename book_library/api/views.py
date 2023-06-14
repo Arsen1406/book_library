@@ -7,8 +7,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from book.models import Book, Genre, Author
 from rentals.models import Rentals
-from api import permissions
-from api import serializers
+from api import permissions, serializers
 
 User = get_user_model()
 
@@ -57,6 +56,11 @@ class RentalsViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, permissions.AdminOrOwner]
     queryset = Rentals.objects.all()
 
+    def get_serializer_class(self):
+        if self.action in ['create', 'partial_update']:
+            return serializers.RentalsSerializer
+        return serializers.RentalsViewSerializer
+
     def get_queryset(self):
         user = self.request.user
         queryset = self.queryset.filter(reader=user)
@@ -79,6 +83,7 @@ class RentalsViewSet(viewsets.ModelViewSet):
                     ),
                     status=status.HTTP_200_OK
                 )
+            book.views += 1
             book.remains -= 1
             book.save()
         self.perform_create(serializer)
@@ -91,6 +96,23 @@ class RentalsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(reader=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        pk = kwargs['pk']
+        rentals = Rentals.objects.prefetch_related('books').get(id=pk)
+        books = [book.title for book in rentals.books.all()]
+        for book in rentals.books.all():
+            book.remains += 1
+            book.save()
+        self.perform_destroy(instance)
+        return Response(
+            data=(
+                f'Вы вернули книги - {", ".join(books)}, '
+                f'спасибо, ждем Вас снова!'
+            ),
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -139,6 +161,6 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             token = str(RefreshToken.for_user(user).access_token)
             return Response(data={'token': token}, status=status.HTTP_200_OK)
         return Response(
-            data={'Вы не предоставили пароль'},
+            data='Вы не предоставили пароль!',
             status=status.HTTP_403_FORBIDDEN
         )
