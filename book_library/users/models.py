@@ -10,6 +10,7 @@ class User(AbstractUser):
         'last_name',
         'password',
     ]
+    id = models.AutoField(primary_key=True)
     email = models.EmailField(
         'email address',
         max_length=254,
@@ -22,4 +23,6 @@ class User(AbstractUser):
         verbose_name_plural = 'Читатели'
 
     def __str__(self):
+        if self.first_name and self.last_name:
+            return f'{self.first_name} {self.last_name}'
         return self.username
