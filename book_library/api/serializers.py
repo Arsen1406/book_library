@@ -1,8 +1,7 @@
-from book.models import Book, Genre, Author
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
+from book.models import Book, Genre, Author
 from rentals.models import Rentals
 
 User = get_user_model()
@@ -22,12 +21,18 @@ class SignUpSerializer(serializers.ModelSerializer):
         allow_blank=False,
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
+    password = serializers.CharField(
+        max_length=20,
+        min_length=None,
+        allow_blank=False,
+    )
 
     class Meta:
         model = User
         fields = (
             'username',
             'email',
+            'password',
             'first_name',
             'last_name',
         )
@@ -35,7 +40,6 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
 
     class Meta:
         model = User
@@ -69,6 +73,16 @@ class AuthorSerializer(serializers.ModelSerializer):
 class BooksSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     author = AuthorSerializer(many=True)
+    reader = serializers.SerializerMethodField('get_readers')
+
+    def get_readers(self, obj):
+        pk = obj.id
+        rentals = Rentals.objects.filter(books__id__in=[pk])
+        readers = [
+            (f'{reader.reader.username}: Возврат - '
+             f'{reader.return_date.date()}'
+             ) for reader in rentals]
+        return readers
 
     class Meta:
         model = Book
@@ -79,6 +93,7 @@ class BooksSerializer(serializers.ModelSerializer):
             'description',
             'genre',
             'remains',
+            'reader',
         )
 
 
