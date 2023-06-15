@@ -18,6 +18,27 @@ services:
     env_file:
       - ../book_library/.env
 
+  redis:
+    image: redis:alpine
+  celery:
+    build: ../book_library/
+    command: celery -A core worker -l info
+    volumes:
+      - redis_value:/usr/src/app/
+    env_file:
+    - ../book_library/.env
+    depends_on:
+      - redis
+  celery-beat:
+    build: ../book_library/
+    command: celery -A core beat -l info
+    volumes:
+      - .celery_value:/usr/src/app/
+    env_file:
+    - ../book_library/.env
+    depends_on:
+      - redis
+
   nginx:
     image: nginx:1.21.3-alpine
     ports:
@@ -35,3 +56,5 @@ volumes:
   db_value:
   static_value:
   media_value:
+  redis_value:
+  celery_value:
