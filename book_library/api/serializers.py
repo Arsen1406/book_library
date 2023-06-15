@@ -40,6 +40,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True)
 
     class Meta:
         model = User

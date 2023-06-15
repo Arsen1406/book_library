@@ -101,18 +101,11 @@ class RentalsViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         pk = kwargs['pk']
         rentals = Rentals.objects.prefetch_related('books').get(id=pk)
-        books = [book.title for book in rentals.books.all()]
         for book in rentals.books.all():
             book.remains += 1
             book.save()
         self.perform_destroy(instance)
-        return Response(
-            data=(
-                f'Вы вернули книги - {", ".join(books)}, '
-                f'спасибо, ждем Вас снова!'
-            ),
-            status=status.HTTP_204_NO_CONTENT
-        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

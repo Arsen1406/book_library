@@ -3,7 +3,7 @@ from book.models import Book, Author, Genre
 
 
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'remains',)
+    list_display = ('pk', 'title', 'remains')
     search_fields = ('title',)
     filter_horizontal = ('author', 'genre',)
     empty_value_display = '-пусто-'
@@ -14,7 +14,7 @@ class GenreAdmin(admin.ModelAdmin):
 
 
 class AuthorAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'birth_day',)
+    list_display = ('last_name', 'first_name', 'birth_day',)
     empty_value_display = '-пусто-'
 
 

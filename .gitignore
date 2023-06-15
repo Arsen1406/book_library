@@ -120,8 +120,9 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+book_library/.env
 .venv
+.idea/
 env/
 venv/
 ENV/
@@ -148,6 +149,8 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+book_library/sent_emails/
+data/
 
 # Cython debug symbols
 cython_debug/
