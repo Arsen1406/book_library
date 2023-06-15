@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+    env_file:
+      - book_library/.env
+  web:
+    build:
+      context: ./
+      dockerfile: _docker/web/Dockerfile
+    restart: always
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./book_library:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - book_library/.env
+
+  redis:
+    image: redis:5-alpine
+    ports:
+      - "6379:6379"
+
+  celery:
+    image: celery:4.0.2
+    build:
+      context: ./
+      dockerfile: _docker/web/Dockerfile
+    command: celery -A core worker -B -l info
+    volumes:
+      - ./book_library:/app
+
+    env_file:
+    - book_library/.env
+    depends_on:
+      - redis
+
+volumes:
+  db_value:
+  redis_value:
+  celery_value:
