@@ -163,6 +163,7 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 class UploadBooksViews(generics.CreateAPIView):
     serializer_class = serializers.FileUploadSerializer
+    permission_classes = [permissions.AdminOnly]
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
