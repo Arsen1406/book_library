@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, generics
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from book.models import Book, Genre, Author
+from core.tasks import upload_data
 from rentals.models import Rentals
 from api import permissions, serializers
 
@@ -156,4 +158,18 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         return Response(
             data='Вы не предоставили пароль!',
             status=status.HTTP_403_FORBIDDEN
+        )
+
+
+class UploadBooksViews(generics.CreateAPIView):
+    serializer_class = serializers.FileUploadSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        file = serializer.validated_data['file']
+        upload_data(file)
+        return Response(
+            data='Файл принят. Данные загружаются.',
+            status=status.HTTP_204_NO_CONTENT
         )
