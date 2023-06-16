@@ -1,10 +1,17 @@
 import csv
 from io import StringIO
 from book.models import Book, Genre, Author
+from book_library import settings
+from django.core.mail import send_mail
+
+
+def send_notification(obj, them, text):
+    email_from = settings.EMAIL_BACKEND
+    send_mail(them, text, email_from, [obj.reader.email])
+    print(f'Сообщение "{text}" отправлено.')
 
 
 def import_books_cvs(file):
-
     reader = csv.DictReader(
         StringIO(file.read().decode('utf8')),
         delimiter=';'
@@ -29,4 +36,3 @@ def import_books_cvs(file):
             book_obj.author.add(author_obj)
         book_obj.remains += int(remains)
         book_obj.save()
-

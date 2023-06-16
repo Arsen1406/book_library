@@ -15,5 +15,9 @@ router_v1.register(r'users', views.UsersViewSet, basename='users')
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
-    path('v1/upload-books/', views.UploadBooksViews.as_view(), name='upload-books'),
+    path(
+        'v1/upload-books/',
+        views.UploadBooksViews.as_view(),
+        name='upload-books'
+    ),
 ]

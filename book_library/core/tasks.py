@@ -1,5 +1,4 @@
-from api.send_notification import send_confirmation_code
-from api.utils import import_books_cvs
+from api.utils import import_books_cvs, send_notification
 from core.celery import app
 from datetime import datetime
 from rentals.models import Rentals
@@ -21,7 +20,7 @@ def check_rentals_users():
             rental.reader,
             ', '.join([book.title for book in books])
         )
-        send_confirmation_code(rental, them, text)
+        send_notification(rental, them, text)
 
 
 @app.task
