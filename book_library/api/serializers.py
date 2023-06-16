@@ -136,3 +136,10 @@ class RentalsViewSerializer(serializers.ModelSerializer):
             'create_date',
             'return_date',
         )
+
+
+class FileUploadSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+    class Meta:
+        fields = ('file',)
